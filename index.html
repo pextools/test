@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Telegram OSINT - ПРОСТОЙ</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #764ba2;
+        }
+        
+        .result {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .result.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .info-item {
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .label {
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Telegram OSINT Analyzer</h1>
+        
+        <div class="search-box">
+            <input type="text" id="username" placeholder="Введите @username или ID..." value="@durov">
+            <button onclick="analyzeUser()">Анализировать</button>
+        </div>
+        
+        <div id="result" class="result">
+            <h3>Результаты анализа:</h3>
+            <div id="userData" class="user-info">
+                <!-- Здесь появятся данные -->
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center; color: #666; font-size: 14px;">
+            <p>Простая версия OSINT анализатора Telegram</p>
+        </div>
+    </div>
+
+    <script>
+        async function analyzeUser() {
+            const username = document.getElementById('username').value.trim();
+            if (!username) return alert('Введите username!');
+            
+            const resultDiv = document.getElementById('result');
+            const userDataDiv = document.getElementById('userData');
+            
+            // Показываем загрузку
+            userDataDiv.innerHTML = '<div style="text-align:center;">⏳ Загрузка...</div>';
+            resultDiv.classList.add('active');
+            
+            try {
+                // Отправляем запрос на бэкенд
+                const response = await fetch(`/api/user/${username}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    userDataDiv.innerHTML = `<div style="color:red;">❌ Ошибка: ${data.error}</div>`;
+                    return;
+                }
+                
+                // Отображаем данные
+                userDataDiv.innerHTML = `
+                    <div class="info-item">
+                        <div class="label">ID:</div>
+                        <div>${data.id || 'Не указан'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Username:</div>
+                        <div>${data.username || 'Не указан'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Имя:</div>
+                        <div>${data.first_name || 'Не указано'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Фамилия:</div>
+                        <div>${data.last_name || 'Не указана'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Бот:</div>
+                        <div>${data.is_bot ? '🤖 Да' : '👤 Нет'}</div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                userDataDiv.innerHTML = `<div style="color:red;">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+        
+        // Анализ при нажатии Enter
+        document.getElementById('username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') analyzeUser();
+        });
+        
+        // Запускаем анализ при загрузке (пример)
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('username').focus();
+            }, 100);
+        };
+    </script>
+</body>
+</html>
